@@ -1,1 +1,2 @@
-module goLog
+module github.com/nilspolek/goLog
+
