@@ -14,4 +14,4 @@
 To use `goLog`, you need to have Go installed. Then, you can install the package using the following command:
 
 ```bash
-go get github.com/nilspolek/goLog/goLog
+go get github.com/nilspolek/goLog
