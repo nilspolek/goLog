@@ -1,4 +1,4 @@
-package goLog
+package github.com/nilspolek/goLog/goLog
 
 import (
 	"fmt"
