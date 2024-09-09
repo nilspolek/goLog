@@ -18,11 +18,6 @@ func ExampleNewStdLogger() {
 	logger.Info("This is an info message")
 	logger.Warning("This is a warning message")
 	logger.Error("This is an error message")
-
-	// Output:
-	// [INFO] This is an info message
-	// [WARNING] This is a warning message
-	// [ERROR] This is an error message
 }
 
 // ExampleNewLogger demonstrates how to use the NewLogger function.

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 )
 
 type LogLevel uint8
@@ -55,13 +54,16 @@ func NewLogger(filePath string) (*Logger, error) {
 	}, nil
 }
 
+func (l *Logger) Logf(level LogLevel, msg string, args []any) {
+	l.Log(level, fmt.Sprintf(msg, args...))
+}
+
 func (l *Logger) Log(level LogLevel, msg string) {
 
 	color := l.getColor(level)
 	resetColor := colorReset
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
 
-	logMsg := fmt.Sprintf("[%s] [%s] %s", timestamp, l.levelToString(level), msg)
+	logMsg := fmt.Sprintf(" [%s] %s", l.levelToString(level), msg)
 
 	if l.toStdout {
 		log.Printf("%s%s%s", color, logMsg, resetColor)
@@ -72,20 +74,20 @@ func (l *Logger) Log(level LogLevel, msg string) {
 	}
 }
 
-func (l *Logger) Debug(msg string) {
-	l.Log(DEBUG, msg)
+func (l *Logger) Debug(msg string, args ...any) {
+	l.Logf(DEBUG, msg, args)
 }
 
-func (l *Logger) Info(msg string) {
-	l.Log(INFO, msg)
+func (l *Logger) Info(msg string, args ...any) {
+	l.Logf(INFO, msg, args)
 }
 
-func (l *Logger) Warning(msg string) {
-	l.Log(WARNING, msg)
+func (l *Logger) Warning(msg string, args ...any) {
+	l.Logf(WARNING, msg, args)
 }
 
-func (l *Logger) Error(msg string) {
-	l.Log(ERROR, msg)
+func (l *Logger) Error(msg string, args ...any) {
+	l.Logf(ERROR, msg, args)
 }
 
 func (l *Logger) levelToString(level LogLevel) string {
