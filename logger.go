@@ -13,9 +13,7 @@ const (
 	INFO
 	WARNING
 	ERROR
-)
 
-const (
 	colorReset  = "\033[0m"
 	colorRed    = "\033[31m"
 	colorYellow = "\033[33m"
@@ -23,89 +21,66 @@ const (
 	colorGreen  = "\033[32m"
 )
 
-type Logger struct {
-	file     *os.File
-	toFile   bool
-	toStdout bool
+var (
+	file   *os.File
+	toFile = false
+)
+
+func ToFile(file2 *os.File) {
+	toFile = true
+	file = file2
 }
 
-func NewStdLogger() (*Logger, error) {
-	return &Logger{
-		file:     nil,
-		toFile:   false,
-		toStdout: true,
-	}, nil
+func Logf(level LogLevel, msg string, args []any) {
+	Log(level, fmt.Sprintf(msg, args...))
 }
 
-func NewLogger(filePath string) (*Logger, error) {
-	var file *os.File
-	var err error
+func Log(level LogLevel, msg string) {
 
-	if filePath != "" {
-		file, err = os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-		if err != nil {
-			return nil, fmt.Errorf("could not open log file: %v", err)
-		}
-	}
-	return &Logger{
-		file:     file,
-		toFile:   filePath != "",
-		toStdout: false,
-	}, nil
-}
-
-func (l *Logger) Logf(level LogLevel, msg string, args []any) {
-	l.Log(level, fmt.Sprintf(msg, args...))
-}
-
-func (l *Logger) Log(level LogLevel, msg string) {
-
-	color := l.getColor(level)
+	color := getColor(level)
 	resetColor := colorReset
 
-	logMsg := fmt.Sprintf(" [%s] %s", l.levelToString(level), msg)
+	logMsg := fmt.Sprintf(" [%s] %s", levelToString(level), msg)
 
-	if l.toStdout {
-		log.Printf("%s%s%s", color, logMsg, resetColor)
-	}
+	log.Printf("%s%s%s", color, logMsg, resetColor)
 
-	if l.toFile && l.file != nil {
-		_, _ = l.file.WriteString(logMsg + "\n")
+	if toFile && file != nil {
+		file.WriteString(logMsg)
 	}
 }
 
-func (l *Logger) Debug(msg string, args ...any) {
-	l.Logf(DEBUG, msg, args)
+func Debug(msg string, args ...any) {
+	Logf(DEBUG, msg, args)
 }
 
-func (l *Logger) Info(msg string, args ...any) {
-	l.Logf(INFO, msg, args)
+func Info(msg string, args ...any) {
+	Logf(INFO, msg, args)
 }
 
-func (l *Logger) Warning(msg string, args ...any) {
-	l.Logf(WARNING, msg, args)
+func Warning(msg string, args ...any) {
+	Logf(WARNING, msg, args)
 }
 
-func (l *Logger) Error(msg string, args ...any) {
-	l.Logf(ERROR, msg, args)
+func Error(msg string, args ...any) {
+	Logf(ERROR, msg, args)
 }
 
-func (l *Logger) LogOnError(a any, err error) any {
+func LogOnError[T any](a T, err error) T {
 	if err != nil {
-		l.Error(err.Error())
+		Error(err.Error())
 	}
 	return a
 }
 
-func (l *Logger) ExitOnError(a any, err error) any {
+func ExitOnError[T any](a T, err error) T {
 	if err != nil {
-		l.Error(err.Error())
+		Error(err.Error())
 		os.Exit(1)
 	}
 	return a
 }
 
-func (l *Logger) levelToString(level LogLevel) string {
+func levelToString(level LogLevel) string {
 	switch level {
 	case DEBUG:
 		return "DEBUG"
@@ -120,7 +95,7 @@ func (l *Logger) levelToString(level LogLevel) string {
 	}
 }
 
-func (l *Logger) getColor(level LogLevel) string {
+func getColor(level LogLevel) string {
 	switch level {
 	case DEBUG:
 		return colorBlue
@@ -135,10 +110,10 @@ func (l *Logger) getColor(level LogLevel) string {
 	}
 }
 
-func (l *Logger) Close() error {
-	if l.toFile && l.file != nil {
-		err := l.file.Close()
-		l.file = nil
+func Close() error {
+	if toFile && file != nil {
+		err := file.Close()
+		file = nil
 		return err
 	}
 	return nil

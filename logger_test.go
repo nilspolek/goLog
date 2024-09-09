@@ -1,137 +1,72 @@
 package goLog
 
 import (
-	"io/ioutil"
+	"bytes"
+	"errors"
 	"os"
-	"strings"
 	"testing"
 )
 
-func TestNewStdLogger(t *testing.T) {
-	logger, err := NewStdLogger()
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-
-	if logger.toFile != false {
-		t.Errorf("expected toFile to be false, got %v", logger.toFile)
-	}
-
-	if logger.toStdout != true {
-		t.Errorf("expected toStdout to be true, got %v", logger.toStdout)
+func TestLogOnError(t *testing.T) {
+	if LogOnError("Hallo", errors.New("Test")) != "Hallo" {
+		t.Fatalf("LogOnError() failed.")
 	}
 }
 
-func TestNewLogger(t *testing.T) {
-	// Create a temporary file for testing
-	file, err := ioutil.TempFile("", "test_log")
+func TestLogToFile(t *testing.T) {
+	file, err := os.CreateTemp("", "log_test")
 	if err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
-	}
-	defer os.Remove(file.Name()) // Clean up the file after test
-	defer file.Close()
-
-	logger, err := NewLogger(file.Name())
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-
-	if logger.toFile != true {
-		t.Errorf("expected toFile to be true, got %v", logger.toFile)
-	}
-
-	if logger.toStdout != false {
-		t.Errorf("expected toStdout to be false, got %v", logger.toStdout)
-	}
-
-	logger.Info("Test Info Message")
-	logger.Close()
-
-	// Check if log message was written to the file
-	content, err := ioutil.ReadFile(file.Name())
-	if err != nil {
-		t.Fatalf("failed to read log file: %v", err)
-	}
-
-	if !strings.Contains(string(content), "Test Info Message") {
-		t.Errorf("expected log to contain 'Test Info Message', but got %s", string(content))
-	}
-}
-
-func TestLogLevels(t *testing.T) {
-	// Create a temporary file for testing
-	file, err := ioutil.TempFile("", "test_log_levels")
-	if err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
-	}
-	defer os.Remove(file.Name())
-	defer file.Close()
-
-	logger, err := NewLogger(file.Name())
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-	defer logger.Close()
-
-	logger.Debug("Test Debug Message")
-	logger.Info("Test Info Message")
-	logger.Warning("Test Warning Message")
-	logger.Error("Test Error Message")
-
-	// Read the file content to verify logs
-	content, err := ioutil.ReadFile(file.Name())
-	if err != nil {
-		t.Fatalf("failed to read log file: %v", err)
-	}
-
-	logContent := string(content)
-	if !strings.Contains(logContent, "Test Debug Message") {
-		t.Errorf("expected log to contain 'Test Debug Message', but got %s", logContent)
-	}
-	if !strings.Contains(logContent, "Test Info Message") {
-		t.Errorf("expected log to contain 'Test Info Message', but got %s", logContent)
-	}
-	if !strings.Contains(logContent, "Test Warning Message") {
-		t.Errorf("expected log to contain 'Test Warning Message', but got %s", logContent)
-	}
-	if !strings.Contains(logContent, "Test Error Message") {
-		t.Errorf("expected log to contain 'Test Error Message', but got %s", logContent)
-	}
-}
-
-func TestCloseLogger(t *testing.T) {
-	// Create a temporary file for testing
-	file, err := ioutil.TempFile("", "test_close_logger")
-	if err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf("could not create temp file: %v", err)
 	}
 	defer os.Remove(file.Name())
 
-	logger, err := NewLogger(file.Name())
+	ToFile(file)
+
+	Log(INFO, "Test file logging")
+
+	file.Close()
+
+	data, err := os.ReadFile(file.Name())
 	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
+		t.Fatalf("could not read temp file: %v", err)
 	}
 
-	err = logger.Close()
-	if err != nil {
-		t.Errorf("expected no error on close, got %v", err)
-	}
-
-	// Try closing again to make sure it doesn't return an error
-	err = logger.Close()
-	if err != nil {
-		t.Errorf("expected no error on double close, got %v", err)
+	expected := "[INFO] Test file logging"
+	if !bytes.Contains(data, []byte(expected)) {
+		t.Errorf("Log to file = %v, want %v", string(data), expected)
 	}
 }
 
-func TestVisual(t *testing.T) {
-	logger, _ := NewStdLogger()
-	logger.Info("Test Info Message")
-	logger.Warning("Test Warning Message")
-	logger.Error("Test Error Message")
-	logger.Debug("Test Debug Message")
-	err := logger.Close()
+func TestClose(t *testing.T) {
+	file, err := os.CreateTemp("", "log_test")
 	if err != nil {
-		t.Errorf("expected no error on close, got %v", err)
+		t.Fatalf("could not create temp file: %v", err)
+	}
+	defer os.Remove(file.Name())
+
+	ToFile(file)
+
+	if err := file.Close(); err != nil {
+		t.Fatalf("could not close temp file: %v", err)
+	}
+}
+
+func TestLogLevelToString(t *testing.T) {
+	tests := []struct {
+		level    LogLevel
+		expected string
+	}{
+		{DEBUG, "DEBUG"},
+		{INFO, "INFO"},
+		{WARNING, "WARNING"},
+		{ERROR, "ERROR"},
+	}
+
+	for _, tt := range tests {
+		t.Run(levelToString(tt.level), func(t *testing.T) {
+			if got := levelToString(tt.level); got != tt.expected {
+				t.Errorf("levelToString() = %v, want %v", got, tt.expected)
+			}
+		})
 	}
 }
