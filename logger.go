@@ -90,6 +90,21 @@ func (l *Logger) Error(msg string, args ...any) {
 	l.Logf(ERROR, msg, args)
 }
 
+func (l *Logger) LogOnError(a any, err error) any {
+	if err != nil {
+		l.Error(err.Error())
+	}
+	return a
+}
+
+func (l *Logger) ExitOnError(a any, err error) any {
+	if err != nil {
+		l.Error(err.Error())
+		os.Exit(1)
+	}
+	return a
+}
+
 func (l *Logger) levelToString(level LogLevel) string {
 	switch level {
 	case DEBUG:
