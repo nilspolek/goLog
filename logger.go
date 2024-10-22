@@ -14,6 +14,13 @@ const (
 	WARNING
 	ERROR
 
+	// LOW Loglevel means only Error and WARNING get Logged
+	LOW
+	// MEDIUM Loglevel means Info, WARNING and Error get Logged
+	MEDIUM
+	// HIGH Loglevel means everything gets Logged
+	HIGH
+
 	colorReset  = "\033[0m"
 	colorRed    = "\033[31m"
 	colorYellow = "\033[33m"
@@ -24,6 +31,8 @@ const (
 var (
 	file   *os.File
 	toFile = false
+	// IsDebug Changes if debug messages are displayed
+	LoggingLevel LogLevel
 )
 
 func ToFile(file2 *os.File) {
@@ -49,11 +58,21 @@ func Log(level LogLevel, msg string) {
 	}
 }
 
+func setLogLevel(level LogLevel) {
+	LoggingLevel = level
+}
+
 func Debug(msg string, args ...any) {
+	if LoggingLevel == HIGH {
+		return
+	}
 	Logf(DEBUG, msg, args)
 }
 
 func Info(msg string, args ...any) {
+	if LoggingLevel == HIGH || LoggingLevel == MEDIUM {
+		return
+	}
 	Logf(INFO, msg, args)
 }
 
