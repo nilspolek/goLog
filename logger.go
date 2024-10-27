@@ -31,7 +31,7 @@ const (
 var (
 	file   *os.File
 	toFile = false
-	// IsDebug Changes if debug messages are displayed
+	// IsDebug Changes if debug messages are displayed.
 	LoggingLevel LogLevel
 )
 
