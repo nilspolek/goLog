@@ -14,11 +14,11 @@ const (
 	WARNING
 	ERROR
 
-	// LOW Loglevel means only Error and WARNING get Logged
+	// LOW Loglevel means everything gets Logged
 	LOW
 	// MEDIUM Loglevel means Info, WARNING and Error get Logged
 	MEDIUM
-	// HIGH Loglevel means everything gets Logged
+	// HIGH Loglevel means Errors and Warnigns get Logged
 	HIGH
 
 	colorReset  = "\033[0m"
